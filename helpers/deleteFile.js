@@ -3,7 +3,7 @@ const { promisify } = require('util');
 const unlinkAsync = promisify(fs.unlink);
 
 const deleteFile = async (data) => {
-    const path = `./uploads/${data}`;
+    const path = `./${data}`;
     await unlinkAsync(path);
 }
 

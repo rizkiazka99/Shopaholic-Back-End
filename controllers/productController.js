@@ -1,6 +1,7 @@
 const { Product, Category, ProductGallery, sequelize } = require('../models');
 const deleteFileInBulk = require('../helpers/deleteFileInBulk.js');
 const { Op } = require('sequelize');
+const deleteFile = require('../helpers/deleteFile');
 
 class ProductController {
     static async getAll(request, response) {
@@ -165,6 +166,7 @@ class ProductController {
             const { name, buy_price, sell_price, stock, CategoryId } = request.body;
             const roleAuth = request.userData.role;
             const SellerId = +request.userData.id;
+            let result;
 
             let duplicateProduct = await Product.findOne({
                 where: {
@@ -176,29 +178,41 @@ class ProductController {
             if (duplicateProduct) {
                 response.status(406).json({
                     status: false,
-                    message: 'You already have a product with a similar name'
+                    message: 'You already have a product with a similar name',
+                    data: null
                 });
             } else {
                 if (roleAuth !== 'Seller') {
                     response.status(403).json({
                         status: false,
-                        message: 'Only Sellers are allowed to perform this action'
+                        message: 'Only Sellers are allowed to perform this action',
+                        data: null
                     });
                 } else {
-                    let result = await Product.create({
-                        name, buy_price, sell_price, stock, SellerId, CategoryId
-                    });
-    
+                    if (request.file) {
+                        const thumbnail = request.file.path;
+
+                        result = await Product.create({
+                            name, buy_price, sell_price, stock, SellerId, CategoryId, thumbnail
+                        });
+                    } else {
+                        result = await Product.create({
+                            name, buy_price, sell_price, stock, SellerId, CategoryId
+                        });
+                    }
+                    
                     response.status(201).json({
                         status: true,
-                        message: 'Product created'
+                        message: 'Product created',
+                        data: result
                     });
                 }
             }
         } catch(err) {
             response.status(500).json({
                 status: false,
-                message: String(err)
+                message: String(err),
+                data: null
             });
         }
     }
@@ -235,7 +249,8 @@ class ProductController {
                             buy_price: buy_price === undefined ? product.buy_price : buy_price,
                             sell_price: sell_price === undefined ? product.sell_price : sell_price,
                             stock: stock === undefined ? product.stock : stock,
-                            CategoryId: CategoryId === undefined ? product.CategoryId : CategoryId
+                            CategoryId: CategoryId === undefined ? product.CategoryId : CategoryId,
+                            thumbnail: request.file ? request.file.path : product.thumbnail
                         }, {
                             where: { id }
                         });
@@ -289,6 +304,10 @@ class ProductController {
                         });
 
                         if (result) {
+                            if (product.thumbnail) {
+                                deleteFile(product.thumbnail)
+                            }
+                            
                             let images = await ProductGallery.findAll({
                                 where: {
                                     ProductId: id
