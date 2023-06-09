@@ -209,6 +209,7 @@ class ProductController {
                 }
             }
         } catch(err) {
+            console.log(err)
             response.status(500).json({
                 status: false,
                 message: String(err),
@@ -254,6 +255,10 @@ class ProductController {
                         }, {
                             where: { id }
                         });
+
+                        if (result[0] === 1) {
+                            deleteFile(product.thumbnail);
+                        }
 
                         result[0] === 1 ? response.status(200).json({
                             status: true,
