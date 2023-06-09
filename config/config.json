@@ -17,7 +17,7 @@
     "username": "postgres",
     "password": "Notanappleuser",
     "database": "postgres",
-    "host": "db.dmhfhfkyhyvcwbxzpned.supabase.co",
+    "host": "db.uodhhxfqrvfnjzrjooie.supabase.co",
     "dialect": "postgres"
   }
 }
